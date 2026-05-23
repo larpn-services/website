@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, Check, ChevronDown, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sanitizeUserText } from "@/lib/sanitize";
 
 const BUDGETS = [
   "a free demo",
@@ -12,6 +13,15 @@ const BUDGETS = [
   "a high budget build",
   "a custom arrangement",
 ];
+
+// FormSubmit acts as a hosted SMTP relay. First submission triggers a
+// one-time verification email to the address below — once you click the
+// link, future submissions forward to your inbox automatically.
+// To change the destination, edit this constant and the matching
+// `connect-src` entry in next.config.ts.
+const CONTACT_ENDPOINT =
+  "https://formsubmit.co/ajax/o.18hamdan@outlook.com";
+const FALLBACK_MAILTO = "o.18hamdan@outlook.com";
 
 // ─── Inline underline input that grows with content ────────────────────────
 
@@ -120,14 +130,67 @@ export default function ContactForm() {
   const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState("");
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Honeypot — hidden field bots auto-fill but humans never touch.
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
-  const ready = name.trim() && email.trim() && budget;
+  const ready = name.trim() && email.trim() && budget && !submitting;
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!ready) return;
-    // In a real build this would POST somewhere. For now just acknowledge.
-    setSent(true);
+
+    if (honeypotRef.current?.value) {
+      // Silently accept so the bot thinks it succeeded and stops retrying.
+      setSent(true);
+      return;
+    }
+
+    const cleanName = sanitizeUserText(name, 120);
+    const cleanEmail = sanitizeUserText(email, 120);
+    const cleanNote = sanitizeUserText(note, 2000);
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(CONTACT_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: cleanName,
+          email: cleanEmail,
+          budget,
+          note: cleanNote || "(none)",
+          // FormSubmit-specific fields:
+          _subject: `LARPN inquiry from ${cleanName}`,
+          _template: "table",
+          _captcha: "false",
+          _replyto: cleanEmail,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(`Send failed (${res.status})`);
+      }
+      const data: { success?: string | boolean; message?: string } = await res
+        .json()
+        .catch(() => ({}));
+      if (data.success === false || data.success === "false") {
+        throw new Error(data.message || "Send failed");
+      }
+      setSent(true);
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? `${err.message}. Email ${FALLBACK_MAILTO} directly while we look at this.`
+          : `Couldn't send — try emailing ${FALLBACK_MAILTO} directly.`,
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -157,6 +220,30 @@ export default function ContactForm() {
               exit={{ opacity: 0, y: -20 }}
               className="relative"
             >
+              {/* Honeypot — visually hidden, off-tab-order, screen-reader hidden */}
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  top: "auto",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <label>
+                  Leave this field blank
+                  <input
+                    ref={honeypotRef}
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </label>
+              </div>
+
               <p className="text-ember text-[11px] tracking-[0.3em] uppercase font-medium mb-10">
                 ▸ A short message
               </p>
@@ -242,6 +329,12 @@ export default function ContactForm() {
                 </AnimatePresence>
               </motion.div>
 
+              {error && (
+                <p className="mt-8 text-ember text-xs font-light leading-relaxed">
+                  {error}
+                </p>
+              )}
+
               {/* Submit row */}
               <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-white/30 text-xs font-light tracking-wide">
@@ -257,7 +350,7 @@ export default function ContactForm() {
                       : "bg-white/10 text-white/30 cursor-not-allowed"
                   )}
                 >
-                  Send
+                  {submitting ? "Sending…" : "Send"}
                   <ArrowUpRight
                     size={15}
                     className={cn(

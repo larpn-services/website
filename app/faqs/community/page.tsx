@@ -1,13 +1,16 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, Heart, Plus, Search, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSupabase, type FaqQuestion } from "@/lib/supabase";
+import { sanitizeUserText } from "@/lib/sanitize";
 
 const LIKED_KEY = "larpn_liked_faq_ids";
+const COOLDOWN_KEY = "larpn_faq_last_submit_ms";
+const COOLDOWN_MS = 60_000;
 
 function readLikedIds(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -39,6 +42,9 @@ export default function CommunityFaqsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Hidden field that real users never fill but bots auto-populate.
+  // A non-empty value is treated as a silent spam signal.
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time localStorage sync on mount
@@ -102,8 +108,34 @@ export default function CommunityFaqsPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const trimmed = question.trim();
-    if (trimmed.length < 8) {
+
+    // Honeypot — bots fill any field they see; silently swallow as success
+    // so they don't learn to retry.
+    if (honeypotRef.current?.value) {
+      setDone(true);
+      setQuestion("");
+      setName("");
+      return;
+    }
+
+    // Per-browser cooldown so a flood from one tab is throttled even before
+    // hitting the DB length checks.
+    try {
+      const last = Number(localStorage.getItem(COOLDOWN_KEY) || 0);
+      const wait = COOLDOWN_MS - (Date.now() - last);
+      if (last > 0 && wait > 0) {
+        setSubmitError(
+          `One submission per minute, please. Try again in ${Math.ceil(wait / 1000)}s.`,
+        );
+        return;
+      }
+    } catch {
+      /* localStorage unavailable — fall through */
+    }
+
+    const cleanQuestion = sanitizeUserText(question, 400);
+    const cleanName = sanitizeUserText(name, 60);
+    if (cleanQuestion.length < 8) {
       setSubmitError("Please write a few more words.");
       return;
     }
@@ -115,8 +147,8 @@ export default function CommunityFaqsPage() {
     setSubmitting(true);
     setSubmitError(null);
     const { error } = await sb.from("faq_questions").insert({
-      question: trimmed,
-      submitted_by: name.trim() || null,
+      question: cleanQuestion,
+      submitted_by: cleanName || null,
       status: "pending",
       category: "user-submitted",
     });
@@ -124,6 +156,11 @@ export default function CommunityFaqsPage() {
     if (error) {
       setSubmitError(error.message);
       return;
+    }
+    try {
+      localStorage.setItem(COOLDOWN_KEY, String(Date.now()));
+    } catch {
+      /* ignore */
     }
     setDone(true);
     setQuestion("");
@@ -287,6 +324,31 @@ export default function CommunityFaqsPage() {
                       </div>
                     ) : (
                       <>
+                        {/* Honeypot — visually hidden, kept out of tab order
+                            and read-out by screen readers via aria-hidden. */}
+                        <div
+                          aria-hidden
+                          style={{
+                            position: "absolute",
+                            left: "-9999px",
+                            top: "auto",
+                            width: 1,
+                            height: 1,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <label>
+                            Leave this field blank
+                            <input
+                              ref={honeypotRef}
+                              type="text"
+                              name="website"
+                              tabIndex={-1}
+                              autoComplete="off"
+                            />
+                          </label>
+                        </div>
+
                         <label className="block text-white/40 text-[10px] tracking-[0.3em] uppercase mb-2">
                           Your question
                         </label>

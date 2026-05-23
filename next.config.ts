@@ -20,7 +20,7 @@ const cspParts = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://i.pinimg.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://prod.spline.design",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://prod.spline.design https://formsubmit.co",
   "media-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
