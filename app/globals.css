@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #000000;
+  --color-ink-soft: #0a0a0a;
+  --color-ink-elev: #131313;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-ember: #ff6b1a;
+  --color-ember-soft: #ff8a3d;
+  /* aliases used by LogoTimeline + other neutral utilities */
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --font-sans: var(--font-geist-sans);
+}
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+}
+
+html,
+body {
+  background: #000000;
+  color: #ffffff;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* iOS smooth scrolling — avoids the "rubber-band" pause on momentum */
+  -webkit-overflow-scrolling: touch;
+  /* Lock side-scroll on small viewports */
+  overflow-x: hidden;
+}
+
+html {
+  /* Honour iPhone safe-area background colour around the notch */
+  background-color: #000000;
+}
+
+* {
+  box-sizing: border-box;
+  /* Suppress iOS Safari's default blue tap highlight on every link/button */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prefers-reduced-motion: drop the noisy infinite animations entirely so
+   users with vestibular sensitivities aren't blasted by orbiting dots. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+::selection {
+  background: rgba(255, 107, 26, 0.4);
+  color: #ffffff;
+}
+
+/* Hide Spline branding ("Built with Spline" watermark) */
+a[href*="spline.design"],
+a[href*="spline.app"] {
+  display: none !important;
+}
+
+/* Belt-and-braces — any logo overlay Spline injects gets clipped */
+.spline-watermark,
+[class*="spline-logo"],
+[class*="splineLogo"] {
+  display: none !important;
+}
+
+/* Film grain — matches the noisy texture in the reference image */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Slow vertical text drift used in marquees / footers */
+@keyframes drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Slow orbiting conic ring behind the Hero floating logo badge */
+@keyframes ember-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Subtle breath behind the logo — softer + slower than the old halo-pulse */
+@keyframes ember-breath {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.08); }
+}
+
+/* ─── UniqueLoading: 4 squares orbit a 2x2 grid, morphing square↔circle ─── */
+@keyframes morph-0 {
+  0%, 100% {
+    transform: translate(-14px, -14px) rotate(0deg) scale(1);
+    border-radius: 0%;
+  }
+  50% {
+    transform: translate(-14px, -14px) rotate(180deg) scale(0.55);
+    border-radius: 50%;
+  }
+}
+@keyframes morph-1 {
+  0%, 100% {
+    transform: translate(14px, -14px) rotate(0deg) scale(1);
+    border-radius: 0%;
+  }
+  50% {
+    transform: translate(14px, -14px) rotate(-180deg) scale(0.55);
+    border-radius: 50%;
+  }
+}
+@keyframes morph-2 {
+  0%, 100% {
+    transform: translate(14px, 14px) rotate(0deg) scale(1);
+    border-radius: 0%;
+  }
+  50% {
+    transform: translate(14px, 14px) rotate(180deg) scale(0.55);
+    border-radius: 50%;
+  }
+}
+@keyframes morph-3 {
+  0%, 100% {
+    transform: translate(-14px, 14px) rotate(0deg) scale(1);
+    border-radius: 0%;
+  }
+  50% {
+    transform: translate(-14px, 14px) rotate(-180deg) scale(0.55);
+    border-radius: 50%;
+  }
+}
+
+/* ─── LogoTimeline horizontal scroll ──────────────────────────────────────── */
+@keyframes move-x {
+  from {
+    transform: translateX(var(--move-x-from, -100%));
+  }
+  to {
+    transform: translateX(var(--move-x-to, 100%));
+  }
+}
+
+/* ─── Home menu marquee: slow infinite slide of duplicated track ────────── */
+@keyframes menu-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.menu-marquee-track {
+  animation: menu-marquee 50s linear infinite;
+}
+/* Pause on hover (also when the user hovers any card inside) */
+.menu-marquee-wrap:hover .menu-marquee-track {
+  animation-play-state: paused;
+}
+
+/* ─── Continuous orbital motion for the ToolsMotif dots ─────────────────── */
+@keyframes tool-orbit-cw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes tool-orbit-ccw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
