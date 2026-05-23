@@ -5,8 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, Heart, Plus, Search, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getSupabase, type FaqQuestion } from "@/lib/supabase";
-import { sanitizeUserText } from "@/lib/sanitize";
+import type { PublicFaq } from "@/lib/faqs";
 
 const LIKED_KEY = "larpn_liked_faq_ids";
 const COOLDOWN_KEY = "larpn_faq_last_submit_ms";
@@ -30,7 +29,7 @@ function writeLikedIds(set: Set<string>) {
 }
 
 export default function CommunityFaqsPage() {
-  const [items, setItems] = useState<FaqQuestion[]>([]);
+  const [items, setItems] = useState<PublicFaq[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [liked, setLiked] = useState<Set<string>>(new Set());
@@ -49,23 +48,28 @@ export default function CommunityFaqsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time localStorage sync on mount
     setLiked(readLikedIds());
-    const sb = getSupabase();
-    if (!sb) {
-      setLoading(false);
-      setError("Supabase not configured yet.");
-      return;
-    }
-    sb.from("faq_questions")
-      .select("*")
-      .eq("status", "approved")
-      .order("like_count", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(200)
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        else setItems((data ?? []) as FaqQuestion[]);
-        setLoading(false);
-      });
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/faqs", { cache: "no-store" });
+        const payload = (await res.json()) as
+          | { items: PublicFaq[] }
+          | { error: string };
+        if (cancelled) return;
+        if (!res.ok || "error" in payload) {
+          setError("error" in payload ? payload.error : "Failed to load.");
+        } else {
+          setItems(payload.items);
+        }
+      } catch {
+        if (!cancelled) setError("Network error.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filtered = useMemo(() => {
@@ -81,8 +85,6 @@ export default function CommunityFaqsPage() {
 
   async function like(id: string) {
     if (liked.has(id)) return;
-    const sb = getSupabase();
-    if (!sb) return;
 
     setItems((prev) =>
       prev.map((q) => (q.id === id ? { ...q, like_count: q.like_count + 1 } : q))
@@ -92,8 +94,14 @@ export default function CommunityFaqsPage() {
     setLiked(next);
     writeLikedIds(next);
 
-    const { data, error } = await sb.rpc("increment_faq_like", { qid: id });
-    if (error || typeof data !== "number" || data < 0) {
+    let ok = false;
+    try {
+      const res = await fetch(`/api/faqs/${id}/like`, { method: "POST" });
+      ok = res.ok;
+    } catch {
+      ok = false;
+    }
+    if (!ok) {
       setItems((prev) =>
         prev.map((q) =>
           q.id === id ? { ...q, like_count: Math.max(0, q.like_count - 1) } : q
@@ -133,28 +141,33 @@ export default function CommunityFaqsPage() {
       /* localStorage unavailable — fall through */
     }
 
-    const cleanQuestion = sanitizeUserText(question, 400);
-    const cleanName = sanitizeUserText(name, 60);
-    if (cleanQuestion.length < 8) {
+    if (question.trim().length < 8) {
       setSubmitError("Please write a few more words.");
-      return;
-    }
-    const sb = getSupabase();
-    if (!sb) {
-      setSubmitError("Submissions are temporarily offline.");
       return;
     }
     setSubmitting(true);
     setSubmitError(null);
-    const { error } = await sb.from("faq_questions").insert({
-      question: cleanQuestion,
-      submitted_by: cleanName || null,
-      status: "pending",
-      category: "user-submitted",
-    });
+    let errorMsg: string | null = null;
+    try {
+      const res = await fetch("/api/faqs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question,
+          submitted_by: name,
+          honeypot: honeypotRef.current?.value ?? "",
+        }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      if (!res.ok) errorMsg = payload.error ?? "Submission failed.";
+    } catch {
+      errorMsg = "Network error.";
+    }
     setSubmitting(false);
-    if (error) {
-      setSubmitError(error.message);
+    if (errorMsg) {
+      setSubmitError(errorMsg);
       return;
     }
     try {

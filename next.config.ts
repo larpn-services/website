@@ -7,20 +7,26 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 //   - script-src 'unsafe-inline' — Next.js inlines a small bootstrap script and
 //                                  framer-motion writes inline style attributes;
 //                                  matching style-src below.
-//   - connect-src includes Supabase (for FAQ submissions/likes) and Spline's
-//     CDN (for the hero scene .splinecode fetch).
+//   - connect-src covers Spline's CDN (for the hero scene .splinecode fetch).
+//     Supabase is NOT listed — FAQ submissions/likes now go through our own
+//     /api/faqs route handlers, so the browser never connects to *.supabase.co.
 //   - img-src allows the Unsplash + Pinterest CDNs already on the
 //     `images.remotePatterns` allowlist, plus inline data: URLs (used for the
 //     SVG grain texture in globals.css).
 //   - frame-ancestors 'none' is redundant with X-Frame-Options: DENY but
 //     stops modern clickjacking attempts that ignore the legacy header.
+// React dev mode needs eval() for HMR + stack reconstruction. In production
+// React never calls eval, so we keep the strict policy there.
+const scriptSrcExtras =
+  process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
+
 const cspParts = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://prod.spline.design",
+  `script-src 'self' 'unsafe-inline'${scriptSrcExtras} https://prod.spline.design https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://i.pinimg.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://prod.spline.design https://formsubmit.co",
+  "connect-src 'self' https://prod.spline.design https://formsubmit.co https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "media-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
@@ -68,8 +74,11 @@ const nextConfig: NextConfig = {
   },
   // Tree-shake heavy barrel imports — Next will rewrite `import { X } from "lucide-react"`
   // to a direct file import so we don't ship the whole icon set.
+  // NOTE: framer-motion removed from this list — combined with Turbopack dev
+  // it leaves stale `next/dynamic` edges in the module graph that survive
+  // restarts. Production build still tree-shakes lucide cleanly.
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion"],
+    optimizePackageImports: ["lucide-react"],
   },
   images: {
     // Serve AVIF first, fall back to WebP, then original. AVIF is ~30% smaller.
@@ -91,27 +100,11 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
-      // Long-lived immutable cache for hashed build assets.
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: `public, max-age=${ONE_YEAR}, immutable`,
-          },
-        ],
-      },
-      // Optimized images: a month at the edge, allow stale-while-revalidate.
-      {
-        source: "/_next/image",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=2678400, stale-while-revalidate=86400",
-          },
-        ],
-      },
       // Static logo / favicon — fingerprinted by file name, safe to cache hard.
+      // `/_next/static/*` and `/_next/image` are intentionally NOT listed here:
+      // Next sets `public, max-age=31536000, immutable` on hashed build assets
+      // itself and the docs state it cannot be overridden; in dev Next emits
+      // `no-store` for HMR and a user-supplied Cache-Control fights it.
       {
         source: "/larpn.jpg",
         headers: [
