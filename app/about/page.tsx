@@ -11,7 +11,7 @@ import {
 import Footer from "@/components/Footer";
 import TechStack from "@/components/TechStack";
 import WebDevPractice from "@/components/WebDevPractice";
-import UiUxPractice from "@/components/UiUxPractice";
+import UiUxPractice from "@/components/UiUxPracticeScene";
 import PersonalToolsPractice from "@/components/PersonalToolsPractice";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
