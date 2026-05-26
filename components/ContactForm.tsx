@@ -14,13 +14,9 @@ const BUDGETS = [
   "a custom arrangement",
 ];
 
-// FormSubmit acts as a hosted SMTP relay. First submission triggers a
-// one-time verification email to the address below — once you click the
-// link, future submissions forward to your inbox automatically.
-// To change the destination, edit this constant and the matching
-// `connect-src` entry in next.config.ts.
-const CONTACT_ENDPOINT =
-  "https://formsubmit.co/ajax/o.18hamdan@outlook.com";
+// Submissions hit our own server-side handler, which forwards to email
+// via Resend. See app/api/contact/route.ts.
+const CONTACT_ENDPOINT = "/api/contact";
 const FALLBACK_MAILTO = "o.18hamdan@outlook.com";
 
 // ─── Inline underline input that grows with content ────────────────────────
@@ -141,12 +137,6 @@ export default function ContactForm() {
     e.preventDefault();
     if (!ready) return;
 
-    if (honeypotRef.current?.value) {
-      // Silently accept so the bot thinks it succeeded and stops retrying.
-      setSent(true);
-      return;
-    }
-
     const cleanName = sanitizeUserText(name, 120);
     const cleanEmail = sanitizeUserText(email, 120);
     const cleanNote = sanitizeUserText(note, 2000);
@@ -164,28 +154,21 @@ export default function ContactForm() {
           name: cleanName,
           email: cleanEmail,
           budget,
-          note: cleanNote || "(none)",
-          // FormSubmit-specific fields:
-          _subject: `LARPN inquiry from ${cleanName}`,
-          _template: "table",
-          _captcha: "false",
-          _replyto: cleanEmail,
+          note: cleanNote,
+          honeypot: honeypotRef.current?.value ?? "",
         }),
       });
-      if (!res.ok) {
-        throw new Error(`Send failed (${res.status})`);
-      }
-      const data: { success?: string | boolean; message?: string } = await res
+      const data: { ok?: boolean; error?: string } = await res
         .json()
         .catch(() => ({}));
-      if (data.success === false || data.success === "false") {
-        throw new Error(data.message || "Send failed");
+      if (!res.ok || data.ok !== true) {
+        throw new Error(data.error || `Send failed (${res.status})`);
       }
       setSent(true);
     } catch (err) {
       setError(
         err instanceof Error && err.message
-          ? `${err.message}. Email ${FALLBACK_MAILTO} directly while we look at this.`
+          ? `${err.message} Email ${FALLBACK_MAILTO} directly while we look at this.`
           : `Couldn't send — try emailing ${FALLBACK_MAILTO} directly.`,
       );
     } finally {
@@ -217,7 +200,8 @@ export default function ContactForm() {
               key="form"
               onSubmit={handleSubmit}
               initial={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -20 }}
+              exit={{ opacity: 0, scale: 0.97, y: -8 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="relative"
             >
               {/* Honeypot — visually hidden, off-tab-order, screen-reader hidden */}

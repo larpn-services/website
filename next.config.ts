@@ -8,8 +8,10 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 //                                  framer-motion writes inline style attributes;
 //                                  matching style-src below.
 //   - connect-src covers Spline's CDN (for the hero scene .splinecode fetch).
-//     Supabase is NOT listed — FAQ submissions/likes now go through our own
-//     /api/faqs route handlers, so the browser never connects to *.supabase.co.
+//     Supabase is NOT listed — FAQ submissions/likes go through our own
+//     /api/faqs route handlers. Likewise, contact-form submissions go to
+//     /api/contact (which calls Resend server-side); the browser never
+//     connects to formsubmit.co or *.resend.com directly.
 //   - img-src allows the Unsplash + Pinterest CDNs already on the
 //     `images.remotePatterns` allowlist, plus inline data: URLs (used for the
 //     SVG grain texture in globals.css).
@@ -26,7 +28,7 @@ const cspParts = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://i.pinimg.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://prod.spline.design https://formsubmit.co https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  "connect-src 'self' https://prod.spline.design https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "media-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
