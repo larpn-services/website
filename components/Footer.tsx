@@ -7,6 +7,7 @@ const cols = [
     items: [
       { label: "About", href: "/about" },
       { label: "Services", href: "/services" },
+      { label: "Templates", href: "/templates" },
       { label: "FAQs", href: "/faqs" },
     ],
   },
