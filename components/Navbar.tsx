@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,8 +21,34 @@ function isActive(pathname: string, href: string) {
 
 export default function Navbar() {
   const pathname = usePathname() || "/";
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+
+  // When you're on a sub-page (e.g. /services/client-work) and click a
+  // top-level nav item (Work → /services), Link's default optimisation can
+  // bail because the URL "appears" to match. Push imperatively so clicking
+  // a section in the nav always behaves like a back navigation to its hub.
+  const handleNavClick =
+    (href: string) =>
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      // Sub-route case: /about/foo → /about.
+      if (pathname !== href && pathname.startsWith(href + "/")) {
+        e.preventDefault();
+        router.push(href);
+      }
+      // Same-pathname-with-search-params case: /about?p=4 → /about.
+      // Without intervening, Link sees a matching URL and does nothing.
+      else if (
+        pathname === href &&
+        typeof window !== "undefined" &&
+        window.location.search.length > 0
+      ) {
+        e.preventDefault();
+        router.push(href);
+      }
+      setOpen(false);
+    };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -68,6 +94,7 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
+                onClick={handleNavClick(link.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "group relative text-xs font-light tracking-[0.2em] uppercase transition-colors",
@@ -123,7 +150,7 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                onClick={() => setOpen(false)}
+                onClick={handleNavClick(link.href)}
                 className={cn(
                   "py-3 text-xs font-light tracking-[0.2em] uppercase",
                   active
