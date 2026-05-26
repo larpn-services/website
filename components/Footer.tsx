@@ -71,7 +71,7 @@ export default function Footer({
 
         {/* bottom row */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-10">
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5 flex-wrap">
             <p className="text-white/30 text-xs font-light tracking-wider">
               © 2026 LARPN — All rights reserved.
             </p>
@@ -81,6 +81,13 @@ export default function Footer({
               className="text-white/40 hover:text-ember text-xs font-light tracking-wider transition-colors"
             >
               Privacy
+            </Link>
+            <span className="hidden sm:inline text-white/15">·</span>
+            <Link
+              href="/terms"
+              className="text-white/40 hover:text-ember text-xs font-light tracking-wider transition-colors"
+            >
+              Terms
             </Link>
           </div>
           <p className="text-white/30 text-xs font-light tracking-[0.25em] uppercase">
