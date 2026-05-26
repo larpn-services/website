@@ -8,6 +8,34 @@ import PyramidAnimation from "./PyramidAnimation";
 // Detail "scene" for the Web Development practice card. Replaces the
 // generic PracticeDetail for that one practice — pyramid + tagline + CTA.
 
+const TECH_TAGS: { label: string; classes: string }[] = [
+  {
+    label: "Three.js",
+    classes:
+      "hover:text-ember hover:border-ember/40 hover:bg-ember/[0.06]",
+  },
+  {
+    label: "Spline",
+    classes:
+      "hover:text-[#a78bfa] hover:border-[#a78bfa]/40 hover:bg-[#a78bfa]/[0.06]",
+  },
+  {
+    label: "GLSL Shaders",
+    classes:
+      "hover:text-[#4ade80] hover:border-[#4ade80]/40 hover:bg-[#4ade80]/[0.06]",
+  },
+  {
+    label: "WebGL",
+    classes:
+      "hover:text-[#38bdf8] hover:border-[#38bdf8]/40 hover:bg-[#38bdf8]/[0.06]",
+  },
+  {
+    label: "React Three Fiber",
+    classes:
+      "hover:text-[#2dd4bf] hover:border-[#2dd4bf]/40 hover:bg-[#2dd4bf]/[0.06]",
+  },
+];
+
 export default function WebDevPractice({ onBack }: { onBack: () => void }) {
   return (
     <motion.div
@@ -98,21 +126,25 @@ export default function WebDevPractice({ onBack }: { onBack: () => void }) {
         }}
         className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-12"
       >
-        {["Three.js", "Spline", "GLSL Shaders", "WebGL", "React Three Fiber"].map(
-          (label) => (
-            <motion.li
-              key={label}
-              variants={{
-                hidden: { opacity: 0, y: 8 },
-                show: { opacity: 1, y: 0 },
-              }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="inline-flex items-center px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] text-white/55 text-[11px] tracking-[0.2em] uppercase font-light"
-            >
-              {label}
-            </motion.li>
-          )
-        )}
+        {TECH_TAGS.map((t) => (
+          <motion.li
+            key={t.label}
+            variants={{
+              hidden: { opacity: 0, y: 8 },
+              show: { opacity: 1, y: 0 },
+            }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className={
+              "inline-flex items-center px-3 py-1.5 rounded-full border " +
+              "border-white/[0.08] bg-white/[0.02] text-white/55 text-[11px] " +
+              "tracking-[0.2em] uppercase font-light transition-colors " +
+              "duration-[180ms] " +
+              t.classes
+            }
+          >
+            {t.label}
+          </motion.li>
+        ))}
       </motion.ul>
 
       {/* CTA */}
