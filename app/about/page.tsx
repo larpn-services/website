@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   motion,
   AnimatePresence,
@@ -39,13 +40,13 @@ const practices: Practice[] = [
     n: "03",
     id: "practice-3",
     title: "UI / UX design",
-    body: "Interfaces that feel inevitable — built fresh, or grafted onto your existing site so it finally feels alive.",
+    body: "Add-ons grafted onto your live site — 3D scenes, maintenance, SEO, logo work. No rebuild, no downtime.",
   },
   {
     n: "04",
     id: "practice-4",
     title: "Personal tools",
-    body: "AI automations, daily helpers, one-shot utilities. From an email-triage agent to a script that re-organises your files — anything you'd hire a custom dev to build.",
+    body: "Ad blockers, bots, scrapers, social automations, one-shot utilities. If you'd pay someone to build it once, I'll build it — and make it run itself.",
   },
 ];
 
@@ -485,22 +486,20 @@ function PracticeDetail({
   );
 }
 
-export default function StudioPage() {
-  const [selected, setSelected] = useState<number | null>(null);
+function StudioPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pRaw = searchParams.get("p");
+  const pIdx = pRaw ? parseInt(pRaw, 10) - 1 : -1;
+  const selected =
+    pIdx >= 0 && pIdx < practices.length ? pIdx : null;
 
-  useEffect(() => {
-    // Deep-link from home blocks: /about?p=1..4 opens that practice directly
-    const params = new URLSearchParams(window.location.search);
-    const p = params.get("p");
-    if (p) {
-      const idx = parseInt(p, 10) - 1;
-      if (idx >= 0 && idx < practices.length) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time URL → state sync on mount
-        setSelected(idx);
-        return;
-      }
-    }
-  }, []);
+  const openPractice = (i: number) => {
+    router.push(`/about?p=${i + 1}`, { scroll: false });
+  };
+  const closePractice = () => {
+    router.push(`/about`, { scroll: false });
+  };
 
   // Whenever the selected practice changes (open or back), scroll to top so
   // the new view starts at the page header instead of mid-scroll.
@@ -545,31 +544,25 @@ export default function StudioPage() {
                       key={p.id}
                       practice={p}
                       index={i}
-                      onSelect={() => setSelected(i)}
+                      onSelect={() => openPractice(i)}
                     />
                   ))}
                 </div>
               </motion.div>
             ) : selected === 0 ? (
-              <WebDevPractice
-                key="detail-webdev"
-                onBack={() => setSelected(null)}
-              />
+              <WebDevPractice key="detail-webdev" onBack={closePractice} />
             ) : selected === 2 ? (
-              <UiUxPractice
-                key="detail-uiux"
-                onBack={() => setSelected(null)}
-              />
+              <UiUxPractice key="detail-uiux" onBack={closePractice} />
             ) : selected === 3 ? (
               <PersonalToolsPractice
                 key="detail-tools"
-                onBack={() => setSelected(null)}
+                onBack={closePractice}
               />
             ) : (
               <PracticeDetail
                 key={`detail-${selected}`}
                 practice={practices[selected]}
-                onBack={() => setSelected(null)}
+                onBack={closePractice}
               />
             )}
           </AnimatePresence>
@@ -579,5 +572,13 @@ export default function StudioPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function StudioPage() {
+  return (
+    <Suspense fallback={<main className="bg-ink min-h-screen" />}>
+      <StudioPageInner />
+    </Suspense>
   );
 }
