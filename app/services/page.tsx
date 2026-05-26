@@ -92,9 +92,6 @@ export default function WorkHubPage() {
             ))}
           </div>
 
-          <p className="text-white/25 text-xs font-light tracking-[0.2em] uppercase mt-14">
-            More case studies on the way.
-          </p>
         </section>
       </main>
       <Footer />
