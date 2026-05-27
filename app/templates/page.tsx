@@ -118,7 +118,7 @@ export default function TemplatesPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setSelected(null)}
-              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+              className="fixed inset-0 z-50 bg-black/85 md:bg-black/70 md:backdrop-blur-sm"
             />
 
             {/* Panel */}
