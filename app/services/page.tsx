@@ -57,7 +57,7 @@ export default function WorkHubPage() {
 
   return (
     <>
-      <main className="bg-ink min-h-screen">
+      <main className="bg-ink min-h-dvh">
         <section className="max-w-5xl mx-auto px-6 sm:px-10 pt-32 pb-24">
           {/* Header */}
           <motion.div

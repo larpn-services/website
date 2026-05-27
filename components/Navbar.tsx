@@ -75,7 +75,9 @@ export default function Navbar() {
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-colors duration-300",
-        scrolled ? "bg-black/40 backdrop-blur-xl" : "bg-transparent"
+        scrolled
+          ? "bg-black/85 md:bg-black/40 md:backdrop-blur-xl"
+          : "bg-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-10 h-16 flex items-center justify-between">
@@ -142,7 +144,7 @@ export default function Navbar() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="md:hidden bg-black/95 backdrop-blur-xl border-t border-white/5 px-6 py-4 flex flex-col"
+          className="md:hidden bg-black border-t border-white/5 px-6 py-4 flex flex-col"
         >
           {navLinks.map((link) => {
             const active = isActive(pathname, link.href);

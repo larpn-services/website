@@ -24,7 +24,7 @@ const SECTIONS = [
 export default function PrivacyPage() {
   return (
     <>
-      <main className="min-h-screen bg-ink pt-32 pb-24">
+      <main className="min-h-dvh bg-ink pt-32 pb-24">
         <section className="max-w-3xl mx-auto px-6 sm:px-10">
           <p className="text-ember text-[11px] tracking-[0.3em] uppercase mb-5 font-medium">
             ▸ Legal

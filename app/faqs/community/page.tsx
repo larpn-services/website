@@ -182,7 +182,7 @@ export default function CommunityFaqsPage() {
 
   return (
     <>
-      <main className="min-h-screen bg-ink pt-28 pb-32">
+      <main className="min-h-dvh bg-ink pt-28 pb-32">
         <section className="max-w-3xl mx-auto px-6 sm:px-10">
           {/* Back link */}
           <Link

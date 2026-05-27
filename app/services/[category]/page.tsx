@@ -32,7 +32,7 @@ export default function CategoryDirectoryPage({
 
   return (
     <>
-      <main className="bg-ink min-h-screen">
+      <main className="bg-ink min-h-dvh">
         <section className="max-w-3xl mx-auto px-6 sm:px-10 pt-28 pb-24">
           {/* Back to hub */}
           <Link

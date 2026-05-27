@@ -162,7 +162,7 @@ export default function FaqsPage() {
 
   return (
     <>
-      <main className="min-h-screen bg-ink pt-32 pb-24">
+      <main className="min-h-dvh bg-ink pt-32 pb-24">
         <section className="max-w-6xl mx-auto px-6 sm:px-10">
           <div className="grid gap-12 md:grid-cols-5 md:gap-16">
             <div className="md:col-span-2">

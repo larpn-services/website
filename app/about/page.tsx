@@ -510,7 +510,7 @@ function StudioPageInner() {
 
   return (
     <>
-      <main className="bg-ink min-h-screen">
+      <main className="bg-ink min-h-dvh">
         <section className="max-w-7xl mx-auto px-6 sm:px-10 pt-32 pb-24">
           <AnimatePresence mode="wait">
             {selected === null ? (
@@ -580,7 +580,7 @@ function StudioPageInner() {
 
 export default function StudioPage() {
   return (
-    <Suspense fallback={<main className="bg-ink min-h-screen" />}>
+    <Suspense fallback={<main className="bg-ink min-h-dvh" />}>
       <StudioPageInner />
     </Suspense>
   );
