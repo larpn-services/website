@@ -99,16 +99,8 @@ export default function Footer({
       {/* oversized wordmark — home page only */}
       {showWordmark && (
         <div className="overflow-hidden mt-12 pointer-events-none select-none">
-          <p
-            className="text-[24vw] leading-[0.85] text-center"
-            style={{
-              fontFamily: "var(--font-italianno)",
-              fontWeight: 400,
-            }}
-          >
-            <span className="text-ember">L</span>
-            <span className="text-white/[0.07]">arp</span>
-            <span className="text-ember">N</span>
+          <p className="text-white/[0.04] text-[20vw] font-light leading-none text-center tracking-tighter">
+            LARPN
           </p>
         </div>
       )}
