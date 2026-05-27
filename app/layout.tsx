@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Italianno } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import LoadingScreen from "@/components/LoadingScreen";
 import Navbar from "@/components/Navbar";
@@ -8,6 +9,13 @@ import PageTransition from "@/components/PageTransition";
 const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+const italianno = Italianno({
+  variable: "--font-italianno",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -33,7 +41,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     // `dark` keeps Tailwind's dark: variants always active (the site is permanently dark)
-    <html lang="en" className={`${geist.variable} dark`}>
+    <html lang="en" className={`${geist.variable} ${italianno.variable} dark`}>
       <body className="min-h-dvh bg-ink text-white grain overflow-x-hidden">
         <LoadingScreen />
         {/* Navbar lives in the root layout so it persists across route
@@ -41,6 +49,7 @@ export default function RootLayout({
             unmount/re-animate on every navigation. */}
         <Navbar />
         <PageTransition>{children}</PageTransition>
+        <Analytics />
       </body>
     </html>
   );
