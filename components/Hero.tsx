@@ -157,10 +157,10 @@ export default function Hero() {
                 />
               </Link>
               <Link
-                href="/about"
+                href="/templates"
                 className="inline-flex items-center min-h-11 px-2 text-white/70 hover:text-white text-sm font-light underline-offset-4 hover:underline transition-colors"
               >
-                Explore prototypes
+                Explore templates
               </Link>
             </div>
           </motion.div>
