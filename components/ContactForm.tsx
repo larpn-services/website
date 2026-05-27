@@ -15,7 +15,7 @@ const BUDGETS = [
 ];
 
 // Submissions hit our own server-side handler, which forwards to email
-// via Resend. See app/api/contact/route.ts.
+// via Web3Forms. See app/api/contact/route.ts.
 const CONTACT_ENDPOINT = "/api/contact";
 const FALLBACK_MAILTO = "o.18hamdan@outlook.com";
 

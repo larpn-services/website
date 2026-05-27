@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { sanitizeUserText } from "@/lib/sanitize";
-import {
-  CONTACT_DESTINATION,
-  CONTACT_FROM,
-  getResend,
-} from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
+const CONTACT_DESTINATION = "o.18hamdan@outlook.com";
 
 type ContactBody = {
   name?: unknown;
@@ -18,7 +16,6 @@ type ContactBody = {
 };
 
 function isValidEmail(value: string): boolean {
-  // Pragmatic check — Resend will reject anything truly malformed.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
@@ -61,8 +58,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const resend = getResend();
-  if (!resend) {
+  const accessKey = process.env.WEB3FORMS_ACCESS_KEY;
+  if (!accessKey) {
     return NextResponse.json(
       {
         error:
@@ -74,30 +71,36 @@ export async function POST(req: Request) {
     );
   }
 
-  const escape = (v: string) =>
-    v.replace(/[&<>]/g, (c) =>
-      c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;",
-    );
+  // Web3Forms accepts a flat JSON payload; the keys other than
+  // `access_key`, `from_name`, `subject`, `replyto`, `botcheck` show
+  // up as labelled fields in the emailed summary.
+  const payload = {
+    access_key: accessKey,
+    from_name: "LARPN Contact",
+    subject: `LARPN inquiry from ${name}`,
+    replyto: email,
+    name,
+    email,
+    budget,
+    notes: note || "(none)",
+  };
 
   try {
-    const { error } = await resend.emails.send({
-      from: CONTACT_FROM,
-      to: CONTACT_DESTINATION,
-      replyTo: email,
-      subject: `LARPN inquiry from ${name}`,
-      html:
-        `<h2>New LARPN inquiry</h2>` +
-        `<p><strong>Name:</strong> ${escape(name)}</p>` +
-        `<p><strong>Email:</strong> ${escape(email)}</p>` +
-        `<p><strong>Budget:</strong> ${escape(budget)}</p>` +
-        `<p><strong>Notes:</strong></p>` +
-        `<pre style="white-space:pre-wrap;font-family:inherit">${escape(
-          note || "(none)",
-        )}</pre>`,
+    const res = await fetch(WEB3FORMS_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
     });
-    if (error) {
+    const data: { success?: boolean; message?: string } = await res
+      .json()
+      .catch(() => ({}));
+
+    if (!res.ok || data.success !== true) {
       return NextResponse.json(
-        { error: error.message || "Send failed." },
+        { error: data.message || `Send failed (${res.status})` },
         { status: 502 },
       );
     }
