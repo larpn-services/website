@@ -13,11 +13,15 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     if (!selected) return;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelected(null);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
   }, [selected]);
 
   return (
@@ -60,6 +64,9 @@ export default function TemplatesPage() {
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 onClick={() => setSelected(tpl)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(tpl); } }}
                 className="group relative rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.025] to-transparent overflow-hidden hover:border-ember/30 transition-colors cursor-pointer"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
@@ -68,6 +75,7 @@ export default function TemplatesPage() {
                     alt={tpl.name}
                     fill
                     sizes="(max-width: 640px) 100vw, 50vw"
+                    priority={i < 2}
                     className="object-cover opacity-60 group-hover:opacity-80 group-hover:scale-[1.02] transition-all duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
@@ -122,7 +130,7 @@ export default function TemplatesPage() {
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
             >
-              <div className="relative bg-[#0f0f0f] border border-white/[0.08] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto">
+              <div className="relative bg-[#0f0f0f] border border-white/[0.08] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto" role="dialog" aria-modal="true" aria-labelledby="modal-title">
                 {/* Close */}
                 <button
                   onClick={() => setSelected(null)}
@@ -150,7 +158,7 @@ export default function TemplatesPage() {
                 {/* Body */}
                 <div className="p-6 sm:p-8">
                   <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                    <h2 className="text-white text-2xl font-normal tracking-tight">
+                    <h2 id="modal-title" className="text-white text-2xl font-normal tracking-tight">
                       {selected.name}
                     </h2>
                     <div className="flex items-center gap-2">
@@ -174,7 +182,7 @@ export default function TemplatesPage() {
                     <a
                       href={selected.previewUrl}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-white/[0.15] text-white/70 hover:text-white hover:border-white/30 text-sm font-light tracking-wide transition-colors"
                     >
                       Preview
