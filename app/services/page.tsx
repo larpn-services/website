@@ -1,21 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import type React from "react";
+
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import Footer from "@/components/Footer";
 import { categories } from "./categories";
 
 export default function WorkHubPage() {
-  const [hovered, setHovered] = useState(categories[0].slug);
-  const active = categories.find((c) => c.slug === hovered) ?? categories[0];
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [smoothPosition, setSmoothPosition] = useState({ x: 0, y: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const lerp = (start: number, end: number, factor: number) =>
+      start + (end - start) * factor;
+
+    const animate = () => {
+      setSmoothPosition((prev) => ({
+        x: lerp(prev.x, mousePosition.x, 0.15),
+        y: lerp(prev.y, mousePosition.y, 0.15),
+      }));
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [mousePosition]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setMousePosition({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  const handleMouseEnter = (index: number) => {
+    setHoveredIndex(index);
+    setIsVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredIndex(null);
+    setIsVisible(false);
+  };
 
   return (
     <>
       <main className="bg-ink min-h-screen">
-        <section className="max-w-7xl mx-auto px-6 sm:px-10 pt-32 pb-24">
+        <section className="max-w-5xl mx-auto px-6 sm:px-10 pt-32 pb-24">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -36,90 +79,123 @@ export default function WorkHubPage() {
             </p>
           </motion.div>
 
-          {/* Tab pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.5 }}
-            className="flex flex-wrap gap-2 mb-8"
+          {/* Showcase list with cursor-following preview */}
+          <div
+            ref={containerRef}
+            onMouseMove={handleMouseMove}
+            className="relative"
           >
-            {categories.map((cat, i) => {
-              const active = hovered === cat.slug;
-              return (
-                <Link
-                  key={cat.slug}
-                  href={`/services/${cat.slug}`}
-                  onMouseEnter={() => setHovered(cat.slug)}
-                  className={
-                    "px-5 py-2.5 rounded-full text-[11px] tracking-[0.2em] uppercase font-medium border transition-colors duration-200 " +
-                    (active
-                      ? "bg-ember/15 border-ember/45 text-ember"
-                      : "bg-white/[0.02] border-white/[0.08] text-white/55 hover:text-white hover:border-white/20")
-                  }
-                >
-                  <span className="text-current/40 mr-2">0{i + 1}</span>
-                  {cat.name}
-                </Link>
-              );
-            })}
-          </motion.div>
-
-          {/* Preview image */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={hovered}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Link
-                  href={`/services/${active.slug}`}
-                  className="group relative block aspect-[4/3] sm:aspect-[21/9] rounded-2xl overflow-hidden border border-white/[0.07] hover:border-ember/30 transition-colors"
-                >
+            {/* Floating preview — desktop only (hover requires a cursor) */}
+            <div
+              className="pointer-events-none fixed z-40 hidden md:block overflow-hidden rounded-xl shadow-2xl"
+              style={{
+                left: containerRef.current?.getBoundingClientRect().left ?? 0,
+                top: containerRef.current?.getBoundingClientRect().top ?? 0,
+                transform: `translate3d(${smoothPosition.x + 24}px, ${smoothPosition.y - 110}px, 0)`,
+                opacity: isVisible ? 1 : 0,
+                transition:
+                  "opacity 280ms cubic-bezier(0.4, 0, 0.2, 1)",
+                willChange: "transform, opacity",
+              }}
+            >
+              <div className="relative w-[320px] h-[200px] bg-ink-soft rounded-xl overflow-hidden border border-white/10">
+                {categories.map((cat, index) => (
                   <Image
-                    src={active.cover}
-                    alt={active.name}
+                    key={cat.slug}
+                    src={cat.cover}
+                    alt={cat.name}
                     fill
-                    sizes="(max-width: 640px) 100vw, 90vw"
-                    className="object-cover opacity-50 group-hover:opacity-65 group-hover:scale-[1.02] transition-all duration-700"
+                    sizes="320px"
+                    priority={index < 2}
+                    className="object-cover transition-all duration-500 ease-out"
+                    style={{
+                      opacity: hoveredIndex === index ? 1 : 0,
+                      transform: `scale(${hoveredIndex === index ? 1 : 1.08})`,
+                      filter: hoveredIndex === index ? "none" : "blur(10px)",
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-ember/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/30 to-transparent pointer-events-none" />
+              </div>
+            </div>
 
-                  <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-12">
-                    <p className="text-ember text-[10px] tracking-[0.35em] uppercase mb-3 font-medium">
-                      0{categories.findIndex((c) => c.slug === active.slug) + 1}
-                    </p>
-                    <h2 className="text-white text-3xl sm:text-5xl font-light tracking-tight mb-3 leading-tight">
-                      {active.name}
-                    </h2>
-                    <p className="text-white/50 text-sm font-light max-w-lg leading-relaxed mb-6">
-                      {active.blurb}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/30 text-[11px] tracking-[0.25em] uppercase font-light">
-                        {active.items.length}{" "}
-                        {active.items.length === 1 ? "item" : "items"}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-white/40 group-hover:text-ember text-[11px] tracking-[0.25em] uppercase font-light transition-colors">
-                        Browse
-                        <ArrowUpRight
-                          size={13}
-                          className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                        />
-                      </span>
+            {/* List */}
+            <div>
+              {categories.map((cat, index) => {
+                const active = hoveredIndex === index;
+                return (
+                  <Link
+                    key={cat.slug}
+                    href={`/services/${cat.slug}`}
+                    className="group block"
+                    onMouseEnter={() => handleMouseEnter(index)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <div className="relative py-7 sm:py-9 border-t border-white/10 transition-colors duration-300">
+                      {/* Background highlight on hover */}
+                      <div
+                        className={
+                          "absolute inset-0 -mx-4 sm:-mx-6 px-4 sm:px-6 rounded-xl bg-white/[0.025] transition-opacity duration-300 " +
+                          (active ? "opacity-100" : "opacity-0")
+                        }
+                      />
+
+                      <div className="relative flex items-start justify-between gap-6">
+                        <div className="flex-1 min-w-0">
+                          {/* index + title */}
+                          <div className="inline-flex items-center gap-3">
+                            <span className="text-ember text-[10px] tracking-[0.35em] uppercase font-medium tabular-nums">
+                              0{index + 1}
+                            </span>
+                            <h3 className="text-white text-2xl sm:text-3xl font-light tracking-tight">
+                              <span className="relative">
+                                {cat.name}
+                                <span
+                                  className={
+                                    "absolute left-0 -bottom-0.5 h-px bg-ember transition-all duration-300 ease-out " +
+                                    (active ? "w-full" : "w-0")
+                                  }
+                                />
+                              </span>
+                            </h3>
+                            <ArrowUpRight
+                              className={
+                                "w-4 h-4 text-white/40 transition-all duration-300 ease-out " +
+                                (active
+                                  ? "opacity-100 translate-x-0 translate-y-0 text-ember"
+                                  : "opacity-0 -translate-x-2 translate-y-2")
+                              }
+                            />
+                          </div>
+
+                          <p
+                            className={
+                              "text-sm sm:text-base font-light mt-3 leading-relaxed max-w-xl transition-colors duration-300 " +
+                              (active ? "text-white/70" : "text-white/40")
+                            }
+                          >
+                            {cat.blurb}
+                          </p>
+                        </div>
+
+                        {/* item count, like the year badge */}
+                        <span
+                          className={
+                            "shrink-0 text-[11px] font-mono tracking-wider tabular-nums transition-colors duration-300 " +
+                            (active ? "text-white/60" : "text-white/30")
+                          }
+                        >
+                          {cat.items.length.toString().padStart(2, "0")}{" "}
+                          {cat.items.length === 1 ? "item" : "items"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
+                  </Link>
+                );
+              })}
+              <div className="border-t border-white/10" />
+            </div>
+          </div>
         </section>
       </main>
       <Footer />
