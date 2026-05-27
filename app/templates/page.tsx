@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, ArrowUpRight } from "lucide-react";
 import Footer from "@/components/Footer";
 import { templates, type Template } from "./templates";
 
 export default function TemplatesPage() {
   const [selected, setSelected] = useState<Template | null>(null);
+
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected]);
 
   return (
     <>
@@ -86,6 +97,102 @@ export default function TemplatesPage() {
         </section>
       </main>
       <Footer />
+
+      {/* Modal */}
+      <AnimatePresence>
+        {selected && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setSelected(null)}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            />
+
+            {/* Panel */}
+            <motion.div
+              key="panel"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div className="relative bg-[#0f0f0f] border border-white/[0.08] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto">
+                {/* Close */}
+                <button
+                  onClick={() => setSelected(null)}
+                  aria-label="Close"
+                  className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/60 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+
+                {/* 2×2 image grid */}
+                <div className="grid grid-cols-2 gap-1 rounded-t-2xl overflow-hidden">
+                  {selected.pics.map((src, idx) => (
+                    <div key={idx} className="relative aspect-[16/10] overflow-hidden">
+                      <Image
+                        src={src}
+                        alt={`${selected.name} screenshot ${idx + 1}`}
+                        fill
+                        sizes="(max-width: 640px) 50vw, 384px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Body */}
+                <div className="p-6 sm:p-8">
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                    <h2 className="text-white text-2xl font-normal tracking-tight">
+                      {selected.name}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/35 text-sm line-through">
+                        ${selected.originalPrice.toFixed(2)}
+                      </span>
+                      <span className="text-ember text-lg font-light">
+                        ${selected.price.toFixed(2)}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-ember/15 border border-ember/30 text-ember text-[10px] tracking-[0.2em] uppercase font-medium">
+                        25% OFF
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-white/50 text-sm font-light leading-relaxed mb-8">
+                    {selected.description}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a
+                      href={selected.previewUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-white/[0.15] text-white/70 hover:text-white hover:border-white/30 text-sm font-light tracking-wide transition-colors"
+                    >
+                      Preview
+                      <ArrowUpRight size={14} />
+                    </a>
+                    <Link
+                      href="/contact"
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-ember hover:bg-ember-soft text-white text-sm font-medium tracking-wide transition-colors"
+                    >
+                      Purchase
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
