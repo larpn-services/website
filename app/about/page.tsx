@@ -14,6 +14,7 @@ import TechStack from "@/components/TechStack";
 import WebDevPractice from "@/components/WebDevPractice";
 import UiUxPractice from "@/components/UiUxPracticeScene";
 import PersonalToolsPractice from "@/components/PersonalToolsPractice";
+import SoftwareEngineeringPractice from "@/components/SoftwareEngineeringPractice";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
 type Practice = {
@@ -551,6 +552,8 @@ function StudioPageInner() {
               </motion.div>
             ) : selected === 0 ? (
               <WebDevPractice key="detail-webdev" onBack={closePractice} />
+            ) : selected === 1 ? (
+              <SoftwareEngineeringPractice key="detail-software" onBack={closePractice} />
             ) : selected === 2 ? (
               <UiUxPractice key="detail-uiux" onBack={closePractice} />
             ) : selected === 3 ? (
