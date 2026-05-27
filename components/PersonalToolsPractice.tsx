@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { motion, type PanInfo } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,6 +19,7 @@ import {
   Video,
   type LucideIcon,
 } from "lucide-react";
+import { EditTool } from "./EditTool";
 
 // Interactive "Tool Studio" — the studio's flagship social-media hygiene
 // automation, rendered as a live tool graph.
@@ -188,6 +190,33 @@ const SOCIAL_PRESET: GraphPreset = {
     { from: "sa-scan", to: "sa-ghosts" },
   ],
 };
+
+const SCRAPER_CODE = `// scraper/social-media.ts
+import puppeteer from "puppeteer";
+
+export async function scrapePosts(
+  platform: string,
+  username: string,
+) {
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+
+  await page.goto(\`https://\${platform}.com/\${username}\`);
+  await page.waitForSelector("[data-post]");
+
+  const posts = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-post]")].map((el) => ({
+      content: el.querySelector(".caption")?.textContent ?? "",
+      likes: parseInt(
+        el.querySelector(".likes")?.textContent ?? "0",
+      ),
+      timestamp: el.querySelector("time")?.dateTime ?? "",
+    })),
+  );
+
+  await browser.close();
+  return posts;
+}`;
 
 
 // ─── Graph canvas (social automation) ──────────────────────────────────────
@@ -373,6 +402,31 @@ export default function PersonalToolsPractice({
 }) {
   const preset = SOCIAL_PRESET;
 
+  const [typed, setTyped] = React.useState("");
+  const [toolState, setToolState] = React.useState<
+    "waiting" | "pending" | "completed"
+  >("waiting");
+
+  React.useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const startDelay = setTimeout(() => {
+      setToolState("pending");
+      let i = 0;
+      interval = setInterval(() => {
+        i++;
+        setTyped(SCRAPER_CODE.slice(0, i));
+        if (i >= SCRAPER_CODE.length) {
+          clearInterval(interval!);
+          setToolState("completed");
+        }
+      }, 18);
+    }, 600);
+    return () => {
+      clearTimeout(startDelay);
+      if (interval) clearInterval(interval);
+    };
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -498,6 +552,37 @@ export default function PersonalToolsPractice({
             className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
           />
         </Link>
+      </motion.div>
+
+      {/* ── Web Scraper Tool ─────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="mt-24"
+      >
+        {/* Section header */}
+        <p className="text-ember text-[10px] tracking-[0.35em] uppercase mb-5 font-medium">
+          02 — Tool
+        </p>
+        <h2 className="text-white text-4xl sm:text-5xl font-light tracking-tight mb-4 leading-[1.05]">
+          Scrape any feed.
+          <br />
+          <span className="text-white/35 italic">Any platform, any data.</span>
+        </h2>
+        <p className="text-white/45 text-base font-light max-w-2xl leading-relaxed mb-10">
+          Point it at an Instagram profile, TikTok page, or Twitter feed — it returns
+          a clean structured dataset ready to pipe into a dashboard, spreadsheet, or
+          downstream automation.
+        </p>
+
+        {/* EditTool */}
+        <EditTool
+          state={toolState}
+          variant="write"
+          filePath="scraper/social-media.ts"
+          newContent={typed}
+        />
       </motion.div>
     </motion.div>
   );
