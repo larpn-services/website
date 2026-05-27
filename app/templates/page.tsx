@@ -148,7 +148,8 @@ export default function TemplatesPage() {
                         src={src}
                         alt={`${selected.name} screenshot ${idx + 1}`}
                         fill
-                        sizes="(max-width: 640px) 50vw, 384px"
+                        sizes="(max-width: 640px) 50vw, 600px"
+                        quality={95}
                         className="object-cover"
                       />
                     </div>
