@@ -1,126 +1,57 @@
-export type TemplateTheme =
-  | "portfolio"
-  | "saas"
-  | "ecommerce"
-  | "editorial";
-
 export type Template = {
   slug: string;
   name: string;
   description: string;
-  theme: TemplateTheme;
   cover: string;
-  previewUrl?: string;
-  price?: number;
-  comingSoon?: boolean;
+  pics: string[];
+  previewUrl: string;
+  price: number;
+  originalPrice: number;
 };
 
-export const THEMES: { id: TemplateTheme | "all"; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "portfolio", label: "Portfolio / Agency" },
-  { id: "saas", label: "SaaS / Dashboard" },
-  { id: "ecommerce", label: "E-commerce" },
-  { id: "editorial", label: "Blog / Editorial" },
-];
-
-// Seed templates — replace covers and previewUrls as real ones land.
 export const templates: Template[] = [
   {
-    slug: "ember-folio",
-    name: "Ember Folio",
-    description: "Dark, motion-first portfolio with case-study deep-dives.",
-    theme: "portfolio",
-    cover:
-      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1600&auto=format&fit=crop",
-    price: 79,
-    comingSoon: true,
-  },
-  {
-    slug: "studio-mono",
-    name: "Studio Mono",
+    slug: "civicbase",
+    name: "CivicBase",
     description:
-      "Monospace agency layout — typography-first, no images required.",
-    theme: "portfolio",
-    cover:
-      "https://images.unsplash.com/photo-1561070791-2526d30994b8?q=80&w=1600&auto=format&fit=crop",
-    price: 49,
-    comingSoon: true,
+      "Built for non-profits and organizations with rich video libraries and content directories.",
+    cover: "/t1-pics/1.png",
+    pics: ["/t1-pics/1.png", "/t1-pics/2.png", "/t1-pics/3.png", "/t1-pics/4.png"],
+    previewUrl: "https://template-1-lime.vercel.app/",
+    price: 89.99,
+    originalPrice: 112.49,
   },
   {
-    slug: "saas-pulse",
-    name: "SaaS Pulse",
+    slug: "atelier",
+    name: "Atelier",
     description:
-      "Conversion-tuned landing with feature grids and pricing tiers.",
-    theme: "saas",
-    cover:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1600&auto=format&fit=crop",
-    price: 99,
-    comingSoon: true,
+      "Finance, consultation & training platform with a structured, trust-building layout.",
+    cover: "/t2-pics/1.png",
+    pics: ["/t2-pics/1.png", "/t2-pics/2.png", "/t2-pics/3.png", "/t2-pics/4.png"],
+    previewUrl: "https://template-2-9d1ow3q3y-omar-hs-projects-cf8ee844.vercel.app/",
+    price: 99.99,
+    originalPrice: 124.99,
   },
   {
-    slug: "dash-control",
-    name: "Dash Control",
-    description: "Internal-tools dashboard skeleton with sidebar + tables.",
-    theme: "saas",
-    cover:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1600&auto=format&fit=crop",
-    price: 129,
-    comingSoon: true,
-  },
-  {
-    slug: "shop-minimal",
-    name: "Shop Minimal",
+    slug: "landmark",
+    name: "Landmark",
     description:
-      "Two-column boutique storefront with focused product cards.",
-    theme: "ecommerce",
-    cover:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1600&auto=format&fit=crop",
-    price: 119,
-    comingSoon: true,
+      "Real estate & property listings template with gallery-first design and lead capture.",
+    cover: "/t3-pics/1.png",
+    pics: ["/t3-pics/1.png", "/t3-pics/2.png", "/t3-pics/3.png", "/t3-pics/4.png"],
+    previewUrl: "https://template-3-wheat-omega.vercel.app/",
+    price: 119.99,
+    originalPrice: 149.99,
   },
   {
-    slug: "shop-bazaar",
-    name: "Shop Bazaar",
-    description: "High-density grid for catalogs with 50+ SKUs.",
-    theme: "ecommerce",
-    cover:
-      "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1600&auto=format&fit=crop",
-    price: 149,
-    comingSoon: true,
-  },
-  {
-    slug: "essay-press",
-    name: "Essay Press",
+    slug: "luminary",
+    name: "Luminary",
     description:
-      "Long-form blog template with serif typography and reader mode.",
-    theme: "editorial",
-    cover:
-      "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1600&auto=format&fit=crop",
-    price: 39,
-    comingSoon: true,
-  },
-  {
-    slug: "magazine-cut",
-    name: "Magazine Cut",
-    description:
-      "Editorial homepage with featured stories, sections, and an archive.",
-    theme: "editorial",
-    cover:
-      "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?q=80&w=1600&auto=format&fit=crop",
-    price: 69,
-    comingSoon: true,
+      "Creative studio & personal brand template with bold visuals and portfolio sections.",
+    cover: "/t4-pics/1.png",
+    pics: ["/t4-pics/1.png", "/t4-pics/2.png", "/t4-pics/3.png", "/t4-pics/4.png"],
+    previewUrl: "https://template-4-pink.vercel.app/#/",
+    price: 99.99,
+    originalPrice: 124.99,
   },
 ];
-
-export function themeLabel(t: TemplateTheme): string {
-  switch (t) {
-    case "portfolio":
-      return "Portfolio";
-    case "saas":
-      return "SaaS";
-    case "ecommerce":
-      return "E-commerce";
-    case "editorial":
-      return "Editorial";
-  }
-}
