@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, ReactNode, useEffect, useState } from "react";
+import { Component, ReactNode, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
@@ -100,35 +100,14 @@ function SplineCanvas() {
 
 // ─── Hero ──────────────────────────────────────────────────────────────────
 
-// On small viewports we never load Spline at all — the WebGL runtime is
-// the single biggest perf cost on iPhone Safari, and the EmberFallback is
-// already on-brand. Saves ~600 KB of JS plus continuous GPU work.
-function useIsDesktopViewport() {
-  const [isDesktop, setIsDesktop] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const sync = () => setIsDesktop(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
-  return isDesktop;
-}
-
 export default function Hero() {
-  const isDesktop = useIsDesktopViewport();
-
   return (
     <section className="relative w-full h-dvh min-h-[640px] sm:min-h-[760px] overflow-hidden bg-ink">
-      {/* Full-bleed Spline scene — desktop only */}
+      {/* Full-bleed Spline scene */}
       <div className="absolute inset-0">
-        {isDesktop ? (
-          <SplineErrorBoundary fallback={<EmberFallback />}>
-            <SplineCanvas />
-          </SplineErrorBoundary>
-        ) : (
-          <EmberFallback />
-        )}
+        <SplineErrorBoundary fallback={<EmberFallback />}>
+          <SplineCanvas />
+        </SplineErrorBoundary>
       </div>
 
       {/* Vignette + bottom fade for legibility */}

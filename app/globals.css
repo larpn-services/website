@@ -27,13 +27,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* iOS smooth scrolling — avoids the "rubber-band" pause on momentum */
   -webkit-overflow-scrolling: touch;
-  /* Lock side-scroll on small viewports */
-  overflow-x: hidden;
 }
 
 html {
   /* Honour iPhone safe-area background colour around the notch */
   background-color: #000000;
+}
+
+/* Lock side-scroll on small viewports. iOS Safari has a long-standing bug
+   where `overflow-x: hidden` on BOTH html and body can clip the lower part
+   of the page and break the footer. Keeping it on body only sidesteps it. */
+body {
+  overflow-x: hidden;
 }
 
 * {
@@ -175,4 +180,10 @@ a[href*="spline.app"] {
 @keyframes tool-orbit-ccw {
   from { transform: rotate(0deg); }
   to   { transform: rotate(-360deg); }
+}
+
+/* ─── Scroll hint pulse on the UI/UX practice page ──────────────────────── */
+@keyframes scroll-hint {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(8px); }
 }

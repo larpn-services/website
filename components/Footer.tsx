@@ -27,7 +27,15 @@ export default function Footer({
   showWordmark?: boolean;
 } = {}) {
   return (
-    <footer className="relative bg-ink border-t border-white/10 pt-20 pb-10">
+    <footer
+      className="relative bg-ink border-t border-white/10 pt-20"
+      style={{
+        // On iPhone, `viewportFit: cover` extends the page under the home
+        // indicator. Without this, the bottom row hides behind the gesture
+        // bar. max() keeps a comfortable 40px floor on desktop.
+        paddingBottom: "max(2.5rem, env(safe-area-inset-bottom))",
+      }}
+    >
       <div className="max-w-7xl mx-auto px-6 sm:px-10">
         {/* top row */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-12 pb-16 border-b border-white/10">
